@@ -1,0 +1,75 @@
+<template> 
+    <lightning-card title="Desk Selection Console"> 
+        <lightning-tabset variant="scoped">
+
+            <lightning-tab label="Locations" icon-name="standard:location">
+                <div class="slds-p-around_medium">
+                    <lightning-combobox
+                        name="location"
+                        label="Select Location"
+                        value={selectedLocation}
+                        placeholder="Select a Location"
+                        options={locationOptions}
+                        onchange={handleLocationChange}>
+                    </lightning-combobox>
+                </div>
+            </lightning-tab>
+    
+            <lightning-tab label="Offices" icon-name="standard:office_365">
+                <div class="slds-p-around_medium">
+                    <template if:true={officeOptions}>
+                        <lightning-combobox
+                            name="office"
+                            label="Select Office"
+                            value={selectedOffice}
+                            placeholder="Select an Office"
+                            options={officeOptions}
+                            onchange={handleOfficeChange}>
+                        </lightning-combobox>
+                    </template>
+                    <template if:false={officeOptions}>
+                        <p class="slds-text-color_weak">Please select a location first.</p>
+                    </template>
+                </div>
+            </lightning-tab>
+    
+            <lightning-tab label="Floors" icon-name="standard:household">
+                <div class="slds-p-around_medium">
+                    <template if:true={floorOptions}>
+                        <lightning-combobox
+                            name="floor"
+                            label="Select Floor"
+                            value={selectedFloor}
+                            placeholder="Select a Floor"
+                            options={floorOptions}
+                            onchange={handleFloorChange}>
+                        </lightning-combobox>
+                    </template>
+                    <template if:false={floorOptions}>
+                        <p class="slds-text-color_weak">Please select an office first.</p>
+                    </template>
+                </div>
+            </lightning-tab>
+    
+            <lightning-tab label="Desks" icon-name="standard:workspace">
+                <div class="slds-p-around_medium">
+                    <template if:true={deskList.length}>
+                        <h3>Available Desks</h3>
+                        <template for:each={deskList} for:item="desk">
+                            <div key={desk.Id} class="slds-box slds-m-vertical_x-small">
+                                <p><strong>{desk.Name}</strong> ({desk.Desk_Number__c}) - {desk.Status__c}</p>
+                                <p class="slds-text-body_small">{desk.Notes__c}</p>
+                            </div>
+                        </template>
+                    </template>
+                    <template if:false={deskList.length}>
+                        <p class="slds-text-color_weak">Please select a floor to view desks.</p>
+                    </template>
+                </div>
+            </lightning-tab>
+    
+        </lightning-tabset>
+    </lightning-card>
+    
+    </template>
+   
