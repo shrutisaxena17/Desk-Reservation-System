@@ -11,29 +11,20 @@
     align-items: center;
     justify-content: center;
     border-radius: 6px;
-    color: black;
     font-weight: bold;
     cursor: pointer;
     transition: transform 0.2s ease;
     position: relative;
-}
-
-.desk-box.available {
-    background-color: #2e7d32;
-}
-
-.desk-box.booked {
-    background-color: #c62828;
-}
-
-.desk-box.maintenance {
-    background-color: #f9a825;
-    color: #000;
+    color: black;
 }
 
 .desk-box:hover {
     transform: scale(1.05);
 }
+
+.desk-box.available       { background-color: #2e7d32; }
+.desk-box.booked          { background-color: #c62828; }
+.desk-box.maintenance     { background-color: #f9a825; color: #000; }
 
 .desk-box .reservation-status {
     position: absolute;
@@ -46,10 +37,10 @@
 
 .legend-container {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 1rem;
     margin-top: 0.5rem;
-    align-items: center;
-    flex-wrap: wrap;
 }
 
 .legend-item {
@@ -66,17 +57,9 @@
     display: inline-block;
 }
 
-.legend-box.available {
-    background-color: #2e7d32;
-}
-
-.legend-box.booked {
-    background-color: #c62828;
-}
-
-.legend-box.maintenance {
-    background-color: #f9a825;
-}
+.legend-box.available    { background-color: #2e7d32; }
+.legend-box.booked       { background-color: #c62828; }
+.legend-box.maintenance  { background-color: #f9a825; }
 
 .slds-modal__container {
     max-width: 30rem !important;
@@ -108,14 +91,6 @@ input[type="date"] {
     min-width: 6rem;
 }
 
-.slds-button_brand {
-    background-color: #0070d2;
-}
-
-.slds-button_destructive {
-    background-color: #d50000;
-}
-
-.slds-button_neutral {
-    background-color: #f1f1f1;
-}
+.slds-button_brand       { background-color: #0070d2; }
+.slds-button_destructive { background-color: #d50000; }
+.slds-button_neutral     { background-color: #f1f1f1; }
