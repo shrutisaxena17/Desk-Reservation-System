@@ -17,8 +17,9 @@
     transition: transform 0.2s ease;
     position: relative;
 }
+
 .desk-box.available {
-    background-color: #2e7d32; 
+    background-color: #2e7d32;
 }
 
 .desk-box.booked {
@@ -26,7 +27,7 @@
 }
 
 .desk-box.maintenance {
-    background-color: #f9a825; 
+    background-color: #f9a825;
     color: #000;
 }
 
@@ -41,6 +42,40 @@
     font-size: 12px;
     font-weight: normal;
     color: white;
+}
+
+.legend-container {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+}
+
+.legend-box {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.legend-box.available {
+    background-color: #2e7d32;
+}
+
+.legend-box.booked {
+    background-color: #c62828;
+}
+
+.legend-box.maintenance {
+    background-color: #f9a825;
 }
 
 .slds-modal__container {
