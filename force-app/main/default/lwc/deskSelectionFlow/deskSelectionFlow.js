@@ -79,6 +79,11 @@ export default class DeskSelectionFlow extends LightningElement {
         if (isBooked) this.activeTabValue = 'ReservationDetails';
     }
 
+        handleReservationName(event) {
+        this.reservationName = event.detail.value;
+    }
+
+
     handleReservationDate(event) {
         const selected = event.detail.value;
         const today = this.getTodayDate();
@@ -91,6 +96,7 @@ export default class DeskSelectionFlow extends LightningElement {
         }
     }
 
+    
 
     async loadDesks() {
         try {
