@@ -90,20 +90,7 @@ export default class DeskSelectionFlow extends LightningElement {
             this.reservationDate = selected;
         }
     }
-    
 
-    handleReservationDate(event) {
-        const selected = event.detail.value;
-        const today = this.getTodayDate();
-    
-        if (selected < today) {
-            this.showToast('Invalid Date', 'Reservation date cannot be in the past.', 'error');
-            this.reservationDate = '';
-        } else {
-            this.reservationDate = selected;
-        }
-    }
-    
 
     async loadDesks() {
         try {
