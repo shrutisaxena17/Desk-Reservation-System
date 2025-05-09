@@ -79,13 +79,31 @@ export default class DeskSelectionFlow extends LightningElement {
         if (isBooked) this.activeTabValue = 'ReservationDetails';
     }
 
-    handleReservationName(event) {
-        this.reservationName = event.detail.value;
+    handleReservationDate(event) {
+        const selected = event.detail.value;
+        const today = this.getTodayDate();
+    
+        if (selected < today) {
+            this.showToast('Invalid Date', 'Reservation date cannot be in the past.', 'error');
+            this.reservationDate = '';
+        } else {
+            this.reservationDate = selected;
+        }
     }
+    
 
     handleReservationDate(event) {
-        this.reservationDate = event.detail.value;
+        const selected = event.detail.value;
+        const today = this.getTodayDate();
+    
+        if (selected < today) {
+            this.showToast('Invalid Date', 'Reservation date cannot be in the past.', 'error');
+            this.reservationDate = '';
+        } else {
+            this.reservationDate = selected;
+        }
     }
+    
 
     async loadDesks() {
         try {
