@@ -1,6 +1,6 @@
 <template>
-    <lightning-card title="Desk Selection Console">
-        <lightning-tabset variant="scoped">
+    <lightning-card title="Desk Selection Console" key={renderCount}>
+        <lightning-tabset variant="scoped" active-tab-value={activeTabValue}>
             <lightning-tab label="Locations" icon-name="standard:location">
                 <div class="slds-p-around_medium">
                     <lightning-combobox name="location" label="Select Location" value={selectedLocation}
@@ -73,7 +73,7 @@
             </lightning-tab>
 
             <template if:true={showReservationTab}>
-                <lightning-tab label="Reservation Info" icon-name="standard:event">
+                <lightning-tab label="Desk Reservation Info" icon-name="standard:event" value="ReservationDetails">
                     <div class="slds-p-around_medium">
                         <template if:true={reservationInfo}>
                             <p><strong>Floor:</strong> {reservationInfo.FloorName}</p>
@@ -87,13 +87,33 @@
                             <c-desk-reservation-viewer
                                 selected-reservation={selectedReservation}></c-desk-reservation-viewer>
                             <template if:true={canCancel}>
-                                <lightning-button label="Cancel Reservation"
-                                    onclick={handleCancelReservation}></lightning-button>
+                                <lightning-input type="checkbox" label="Cancel Reservation"
+                                    onchange={handleCancelCheckbox} checked={isCancelled}>
+                                </lightning-input>
                             </template>
+
                         </template>
                     </div>
                 </lightning-tab>
             </template>
+
+
+            <lightning-tab label="Reservation Info" icon-name="standard:event">
+                <div class="slds-m-top_medium">
+                    <h3 class="slds-text-heading_small">All Reservations From You:</h3>
+                    <template for:each={userReservations} for:item="res">
+                        <div key={res.Id} class="slds-box slds-box_xx-small slds-m-top_x-small">
+                            <p><strong>Date:</strong> {res.Reservation_Date__c}</p>
+                            <p><strong>Desk:</strong> {res.Desk__r.Name}</p>
+                            <p><strong>Floor:</strong> {res.Desk__r.Desks__r.Floors__r.Name}</p>
+                            <p><strong>Office:</strong> {res.Desk__r.Desks__r.Floors__r.Office_Location__r.Name}</p>
+                            <p><strong>Status:</strong> {res.Status__c}</p>
+                        </div>
+                    </template>
+                </div>
+            </lightning-tab>
+
+
         </lightning-tabset>
     </lightning-card>
 

@@ -26,9 +26,10 @@ public with sharing class DeskSelectionController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static Desk_Reservation__c getReservationForDesk(Id deskId) {
-        return DeskReservationService.getLatestReservationForDesk(deskId);
-    }
+public static Desk_Reservation__c getReservationForDesk(Id deskId, Date reservationDate) {
+    return DeskReservationService.getReservationForDeskOnDate(deskId, reservationDate);
+}
+
 
     @AuraEnabled
     public static void cancelReservation(Id reservationId) {
@@ -38,5 +39,10 @@ public with sharing class DeskSelectionController {
     @AuraEnabled(cacheable=true)
     public static List<Desk_Reservation__c> getUpcomingReservationsForUser(Id userId) {
         return DeskReservationService.getUpcomingReservations(userId);
+    }
+
+     @AuraEnabled(cacheable=true)
+    public static List<Desk_Reservation__c>getAllReservations(Id userId) {
+        return DeskReservationService.getAllReservations(userId);
     }
 }

@@ -1,4 +1,4 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, track, wire, api } from 'lwc';
 import getLocations from '@salesforce/apex/DeskSelectionController.getLocations';
 import getOffices from '@salesforce/apex/DeskSelectionController.getOffices';
 import getFloors from '@salesforce/apex/DeskSelectionController.getFloors';
@@ -8,12 +8,18 @@ import getReservationForDesk from '@salesforce/apex/DeskSelectionController.getR
 import cancelReservation from '@salesforce/apex/DeskSelectionController.cancelReservation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import USER_ID from '@salesforce/user/Id';
+import getAllReservations from '@salesforce/apex/DeskSelectionController.getAllReservations';
+import { refreshApex } from '@salesforce/apex';
 
 export default class DeskSelectionFlow extends LightningElement {
     @track selectedReservation;
     @track reservationInfo;
     @track showReservationTab = false;
     @track selectedDate = this.getTodayDate();
+    @track userReservations = [];
+    @track _desksWiredResult;
+    @track isCancelled = false;
+
 
     locationOptions = [];
     officeOptions = [];
@@ -31,6 +37,7 @@ export default class DeskSelectionFlow extends LightningElement {
     showModal = false;
     canCancel = false;
     userId = USER_ID;
+    renderCount = 0;
 
     connectedCallback() {
         this.loadPicklist(getLocations, 'locationOptions', 'Error fetching locations');
@@ -79,15 +86,14 @@ export default class DeskSelectionFlow extends LightningElement {
         if (isBooked) this.activeTabValue = 'ReservationDetails';
     }
 
-        handleReservationName(event) {
+    handleReservationName(event) {
         this.reservationName = event.detail.value;
     }
-
 
     handleReservationDate(event) {
         const selected = event.detail.value;
         const today = this.getTodayDate();
-    
+
         if (selected < today) {
             this.showToast('Invalid Date', 'Reservation date cannot be in the past.', 'error');
             this.reservationDate = '';
@@ -96,20 +102,47 @@ export default class DeskSelectionFlow extends LightningElement {
         }
     }
 
-    
+    @wire(getAllReservations, { userId: '$userId' })
+    wiredUserReservations({ error, data }) {
+        if (data) {
+            this.userReservations = data;
+            this.showUserReservations = true;
+            this.userReservationError = undefined;
+        } else if (error) {
+            this.userReservationError = error;
+            this.userReservations = [];
+            this.showUserReservations = false;
+            this.showToast('Error', 'Failed to load your reservations', 'error');
+        }
+    }
+
 
     async loadDesks() {
         try {
+            this.deskList = [];
             const data = await getDesks({ floorId: this.selectedFloor, selectedDate: this.selectedDate });
-            this.deskList = data.map(desk => {
+
+            const processedData = data.map(desk => {
                 const reservations = desk.Desk_Reservations__r || [];
                 const isBooked = reservations.length > 0;
+
                 return {
                     ...desk,
                     deskCssClass: `desk-box ${this.getDeskStatusClass(desk, reservations)}`,
                     title: `Desk ${desk.Desk_Number__c} - ${isBooked ? 'Booked' : 'Available'}`
                 };
             });
+
+            this.deskList = processedData;
+
+            if (this.deskList.length > 0) {
+                setTimeout(() => {
+                    this.deskList = [...this.deskList];
+                }, 50);
+            }
+
+            console.log('Desks loaded:', this.deskList.length);
+            console.log('Sample desk status:', this.deskList.length > 0 ? this.deskList[0].deskCssClass : 'none');
         } catch (error) {
             this.showError('Error fetching desks', error);
         }
@@ -117,7 +150,10 @@ export default class DeskSelectionFlow extends LightningElement {
 
     async fetchReservation(deskId) {
         try {
-            const result = await getReservationForDesk({ deskId });
+            const result = await getReservationForDesk({
+                deskId: deskId,
+                reservationDate: this.selectedDate 
+            });
 
             this.reservationInfo = {
                 Id: result.Id,
@@ -140,10 +176,74 @@ export default class DeskSelectionFlow extends LightningElement {
         }
     }
 
+
     prepareNewReservation() {
         this.reservationDate = this.getTodayDate();
         this.reservationName = '';
         this.showModal = true;
+    }
+
+
+    async handleCancelCheckbox(event) {
+        if (event.target.checked) {
+            try {
+                await cancelReservation({ reservationId: this.reservationInfo.Id });
+                this.showToast('Success', 'Reservation cancelled', 'success');
+                this.resetReservationView();
+                this.forceComponentRefresh();
+                this.isCancelled = true;
+            } catch (error) {
+                this.showError('Failed to cancel reservation', error);
+                this.isCancelled = false;
+            }
+        } else {
+                        this.isCancelled = false;
+        }
+    }
+
+    forceComponentRefresh() {
+        const refreshEvent = new CustomEvent('refresh');
+        this.dispatchEvent(refreshEvent);
+
+        this.renderCount++;
+
+        if (this.selectedDeskId) {
+            this.updateDeskStatusInList(this.selectedDeskId, 'booked');
+        }
+
+        this.isLoading = true;
+
+        setTimeout(() => {
+            Promise.all([
+                this.loadDesks(),
+                refreshApex(this._desksWiredResult),
+                this.wiredUserReservations.refresh ? this.wiredUserReservations.refresh() : null
+            ])
+                .finally(() => {
+                    this.isLoading = false;
+                });
+        }, 100);
+    }
+
+    updateDeskStatusInList(deskId, newStatus) {
+        if (!this.deskList || this.deskList.length === 0) return;
+
+        const updatedDeskList = this.deskList.map(desk => {
+            if (desk.Id === deskId) {
+                const isBooked = newStatus === 'booked';
+                const mockReservations = isBooked ? [{ Status__c: 'Booked' }] : [];
+
+                return {
+                    ...desk,
+                    Desk_Reservations__r: mockReservations,
+                    deskCssClass: `desk-box ${isBooked ? 'booked' : 'available'}`,
+                    title: `Desk ${desk.Desk_Number__c} - ${isBooked ? 'Booked' : 'Available'}`
+                };
+            }
+            return desk;
+        });
+
+        this.deskList = [...updatedDeskList];
     }
 
     async submitReservation() {
@@ -158,24 +258,16 @@ export default class DeskSelectionFlow extends LightningElement {
                 reservationDate: this.reservationDate,
                 reservationName: this.reservationName
             });
+
+            this.updateDeskStatusInList(this.selectedDeskId, 'booked');
+
             this.showToast('Success', 'Desk booked successfully', 'success');
             this.closeModal();
-            this.loadDesks();
         } catch (error) {
-            this.showError('Error creating reservation', error);
+            this.showToast('Error', error.body.message || 'Error creating reservation', 'error');
         }
     }
 
-    async handleCancelReservation() {
-        try {
-            await cancelReservation({ reservationId: this.reservationInfo.Id });
-            this.showToast('Success', 'Reservation cancelled', 'success');
-            this.resetReservationView();
-            this.loadDesks();
-        } catch (error) {
-            this.showError('Failed to cancel reservation', error);
-        }
-    }
 
     resetReservationView() {
         this.showReservationTab = false;
@@ -189,6 +281,8 @@ export default class DeskSelectionFlow extends LightningElement {
     getDeskStatusClass(desk, reservations = []) {
         const status = desk.Status__c;
         const reservationStatus = reservations[0]?.Status__c;
+
+        console.log(`Desk ${desk.Desk_Number__c} status check - Status: ${status}, Reservation status: ${reservationStatus}`);
 
         if (['Under Maintenance', 'Unavailable'].includes(status)) return 'maintenance';
         if (['Booked', 'Checked-In'].includes(reservationStatus)) return 'booked';
@@ -228,6 +322,6 @@ export default class DeskSelectionFlow extends LightningElement {
 
     showError(contextMessage, error) {
         console.error(`${contextMessage}:`, error);
-        this.showToast('Error', contextMessage, 'error');
+        this.showToast('Error', `Something went wrong. Please try again.`, 'error');
     }
 }
