@@ -83,15 +83,13 @@
                             <p><strong>Name:</strong> {reservationInfo.UserName}</p>
                             <p><strong>Date:</strong> {reservationInfo.ReservationDate}</p>
                             <p><strong>Status:</strong> {reservationInfo.Status}</p>
-
-                            <c-desk-reservation-viewer
-                                selected-reservation={selectedReservation}></c-desk-reservation-viewer>
                             <template if:true={canCancel}>
                                 <lightning-input type="checkbox" label="Cancel Reservation"
                                     onchange={handleCancelCheckbox} checked={isCancelled}>
                                 </lightning-input>
                             </template>
-
+                            <c-desk-reservation-viewer
+                                selected-reservation={selectedReservation}></c-desk-reservation-viewer>
                         </template>
                     </div>
                 </lightning-tab>
@@ -108,6 +106,11 @@
                             <p><strong>Floor:</strong> {res.Desk__r.Desks__r.Floors__r.Name}</p>
                             <p><strong>Office:</strong> {res.Desk__r.Desks__r.Floors__r.Office_Location__r.Name}</p>
                             <p><strong>Status:</strong> {res.Status__c}</p>
+                            <template if:true={res.canCancel}>
+                                <lightning-input type="checkbox" label="Cancel Reservation" data-id={res.Id}
+                                    onchange={handleCancelCheckbox}>
+                                </lightning-input>
+                            </template>
                         </div>
                     </template>
                 </div>

@@ -103,18 +103,26 @@ export default class DeskSelectionFlow extends LightningElement {
     }
 
     @wire(getAllReservations, { userId: '$userId' })
-    wiredUserReservations({ error, data }) {
-        if (data) {
-            this.userReservations = data;
-            this.showUserReservations = true;
-            this.userReservationError = undefined;
-        } else if (error) {
-            this.userReservationError = error;
-            this.userReservations = [];
-            this.showUserReservations = false;
-            this.showToast('Error', 'Failed to load your reservations', 'error');
-        }
+   wiredUserReservations({ error, data }) {
+    if (data) {
+        const today = new Date().setHours(0, 0, 0, 0);
+        this.userReservations = data.map(res => {
+            const resDate = new Date(res.Reservation_Date__c).setHours(0, 0, 0, 0);
+            return {
+                ...res,
+                canCancel: resDate >= today
+            };
+        });
+        this.showUserReservations = true;
+        this.userReservationError = undefined;
+    } else if (error) {
+        this.userReservationError = error;
+        this.userReservations = [];
+        this.showUserReservations = false;
+        this.showToast('Error', 'Failed to load your reservations', 'error');
     }
+}
+
 
 
     async loadDesks() {
@@ -152,7 +160,7 @@ export default class DeskSelectionFlow extends LightningElement {
         try {
             const result = await getReservationForDesk({
                 deskId: deskId,
-                reservationDate: this.selectedDate 
+                reservationDate: this.selectedDate
             });
 
             this.reservationInfo = {
@@ -169,20 +177,20 @@ export default class DeskSelectionFlow extends LightningElement {
             };
 
             this.selectedReservation = result;
-            this.canCancel = [result.User__r?.Id, result.CreatedById].includes(this.userId);
-            this.showReservationTab = true;
+            const today = this.getTodayDate();
+            const resDate = result.Reservation_Date__c;
+            const isFutureOrToday = resDate >= today;
+
+            this.canCancel = isFutureOrToday && [result.User__r?.Id, result.CreatedById].includes(this.userId); this.showReservationTab = true;
         } catch (error) {
             this.showError('Error fetching reservation info', error);
         }
     }
-
-
     prepareNewReservation() {
         this.reservationDate = this.getTodayDate();
         this.reservationName = '';
         this.showModal = true;
     }
-
 
     async handleCancelCheckbox(event) {
         if (event.target.checked) {
@@ -197,7 +205,7 @@ export default class DeskSelectionFlow extends LightningElement {
                 this.isCancelled = false;
             }
         } else {
-                        this.isCancelled = false;
+            this.isCancelled = false;
         }
     }
 
