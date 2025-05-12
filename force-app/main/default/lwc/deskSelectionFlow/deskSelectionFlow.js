@@ -103,25 +103,25 @@ export default class DeskSelectionFlow extends LightningElement {
     }
 
     @wire(getAllReservations, { userId: '$userId' })
-   wiredUserReservations({ error, data }) {
-    if (data) {
-        const today = new Date().setHours(0, 0, 0, 0);
-        this.userReservations = data.map(res => {
-            const resDate = new Date(res.Reservation_Date__c).setHours(0, 0, 0, 0);
-            return {
-                ...res,
-                canCancel: resDate >= today
-            };
-        });
-        this.showUserReservations = true;
-        this.userReservationError = undefined;
-    } else if (error) {
-        this.userReservationError = error;
-        this.userReservations = [];
-        this.showUserReservations = false;
-        this.showToast('Error', 'Failed to load your reservations', 'error');
+    wiredUserReservations({ error, data }) {
+        if (data) {
+            const today = new Date().setHours(0, 0, 0, 0);
+            this.userReservations = data.map(res => {
+                const resDate = new Date(res.Reservation_Date__c).setHours(0, 0, 0, 0);
+                return {
+                    ...res,
+                    canCancel: res.Status__c === 'Booked' && resDate >= today
+                };
+            });
+            this.showUserReservations = true;
+            this.userReservationError = undefined;
+        } else if (error) {
+            this.userReservationError = error;
+            this.userReservations = [];
+            this.showUserReservations = false;
+            this.showToast('Error', 'Failed to load your reservations', 'error');
+        }
     }
-}
 
 
 
@@ -187,15 +187,17 @@ export default class DeskSelectionFlow extends LightningElement {
         }
     }
     prepareNewReservation() {
-        this.reservationDate = this.getTodayDate();
+        this.reservationDate = this.selectedDate;
         this.reservationName = '';
         this.showModal = true;
     }
 
     async handleCancelCheckbox(event) {
         if (event.target.checked) {
+            const reservationId = event.target.dataset.id || this.reservationInfo?.Id;
+
             try {
-                await cancelReservation({ reservationId: this.reservationInfo.Id });
+                await cancelReservation({ reservationId });
                 this.showToast('Success', 'Reservation cancelled', 'success');
                 this.resetReservationView();
                 this.forceComponentRefresh();
@@ -208,6 +210,7 @@ export default class DeskSelectionFlow extends LightningElement {
             this.isCancelled = false;
         }
     }
+
 
     forceComponentRefresh() {
         const refreshEvent = new CustomEvent('refresh');

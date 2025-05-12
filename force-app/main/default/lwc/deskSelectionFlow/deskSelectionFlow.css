@@ -91,17 +91,6 @@ input[type="date"] {
     min-width: 6rem;
 }
 
-
-/* Add loading spinner styles */
-.loading-spinner {
-    position: relative;
-    height: 100px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-
 .slds-button_brand       { background-color: #0070d2; }
 .slds-button_destructive { background-color: #d50000; }
 .slds-button_neutral     { background-color: #f1f1f1; }
